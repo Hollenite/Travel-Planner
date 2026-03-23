@@ -10,14 +10,14 @@ const items = [
 
 export default function BottomNav() {
   return (
-    <nav className="flex lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#13131A]/95 backdrop-blur-xl border-t border-[#2A2A38]/60 z-50 px-2 pb-safe">
+    <nav className="flex lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/92 backdrop-blur-xl border-t border-slate-200 z-50 px-2 pb-safe">
       {items.map(({ icon: Icon, label, to }) => (
         <NavLink
           key={to}
           to={to}
           className={({ isActive }) =>
             `flex flex-col items-center justify-center gap-1 flex-1 py-2 min-h-[44px] transition-colors ${
-              isActive ? 'text-accent' : 'text-muted'
+              isActive ? 'text-accent' : 'text-slate-400'
             }`
           }
         >

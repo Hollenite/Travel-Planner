@@ -16,11 +16,11 @@ const getGradientStyle = (str) => {
 
 const getStatusStyle = (status) => {
   switch (status) {
-    case 'upcoming': return 'bg-accent/80 text-white';
-    case 'ongoing': return 'bg-success/80 text-white';
-    case 'completed': return 'bg-surface2/90 text-muted';
-    case 'draft': return 'bg-warning/80 text-bg';
-    default: return 'bg-surface2/80 text-muted';
+    case 'upcoming': return 'bg-teal-100 text-teal-700';
+    case 'ongoing': return 'bg-emerald-100 text-emerald-700';
+    case 'completed': return 'bg-slate-100 text-slate-500';
+    case 'draft': return 'bg-amber-100 text-amber-700';
+    default: return 'bg-slate-100 text-slate-500';
   }
 };
 
@@ -40,7 +40,7 @@ const formatDateRange = (start, end) => {
 
 export default function TripCard({ trip }) {
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer hover:border-accent/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 cursor-pointer hover:border-[rgba(20,184,166,0.35)] hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
       
       {/* Top Section (Image/Gradient area) */}
       <div 
@@ -50,7 +50,7 @@ export default function TripCard({ trip }) {
           <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium ${getStatusStyle(trip.status)} capitalize`}>
             {trip.status}
           </span>
-          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-surface2/80 text-text">
+          <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-medium bg-white/90 text-slate-900">
             {trip.duration} days
           </span>
         </div>
@@ -58,22 +58,22 @@ export default function TripCard({ trip }) {
 
       {/* Bottom Section */}
       <div className="p-4">
-        <h3 className="font-display text-base font-semibold text-text truncate">
+        <h3 className="font-display text-base font-semibold text-slate-900 truncate">
           {trip.tripName}
         </h3>
         
         <div className="flex items-center gap-1 mt-1">
-          <MapPin className="w-3 h-3 text-muted shrink-0" />
-          <span className="text-xs text-muted font-mono truncate">
+          <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+          <span className="text-xs text-slate-500 font-mono truncate">
             {trip.destination}
           </span>
         </div>
         
-        <div className="text-xs text-muted font-mono mt-1 truncate">
+        <div className="text-xs text-slate-400 font-mono mt-1 truncate">
           {formatDateRange(trip.startDate, trip.endDate)}
         </div>
         
-        <div className="flex items-center gap-1 mt-2 text-xs text-muted">
+        <div className="flex items-center gap-1 mt-2 text-xs text-slate-400">
           <Users className="w-3 h-3 shrink-0" />
           <span>
             {trip.travelers.adults + trip.travelers.children} traveler(s)

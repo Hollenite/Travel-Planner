@@ -4,25 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0A0A0F',
-        surface: '#13131A',
-        surface2: '#1C1C27',
-        border: '#2A2A38',
-        accent: '#6C63FF',
-        accent2: '#FF6584',
-        accent3: '#43E8D8',
-        text: '#F0F0F5',
-        muted: '#8888A0',
-        success: '#4ADE80',
-        warning: '#FBBF24',
+        // ── Base ──────────────────────────────────────────────
+        bg:       '#FFFFFF',   // page background (pure white)
+        surface:  '#FFFFFF',   // card/panel background (white)
+        surface2: '#F8FAFC',   // elevated surface, hover bg (slate-50)
+        border:   '#E2E8F0',   // borders (slate-200)
+
+        // ── Text ──────────────────────────────────────────────
+        text:     '#0F172A',   // primary text (slate-900)
+        muted:    '#64748B',   // secondary text (slate-500)
+
+        // ── Accents ───────────────────────────────────────────
+        accent:   '#14B8A6',   // teal-500 (primary CTA, active states)
+        accent2:  '#10B981',   // emerald-500 (secondary highlights)
+        accent3:  '#06B6D4',   // cyan-400 (tertiary)
+
+        // ── Status ────────────────────────────────────────────
+        success:  '#22C55E',
+        warning:  '#F59E0B',
+        danger:   '#EF4444',
       },
       fontFamily: {
         display: ['"Playfair Display"', 'serif'],
-        sans: ['"DM Sans"', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans:    ['"DM Sans"', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {
-        card: '16px',
+        card:  '16px',
         input: '8px',
       },
     },

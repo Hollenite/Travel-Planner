@@ -25,11 +25,11 @@ export default function Header() {
   const firstName = user?.displayName?.split(' ')[0] || 'Traveler';
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-6 lg:px-8 bg-[#0A0A0F]/80 backdrop-blur-xl border-b border-[#2A2A38]/50">
+    <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-6 lg:px-8 bg-white/85 backdrop-blur-xl border-b border-slate-200">
       
       {/* Desktop Left: Page Title */}
       <div className="hidden lg:block">
-        <h1 className="font-display text-xl font-semibold text-text">
+        <h1 className="font-display text-xl font-semibold text-slate-900">
           {title}
         </h1>
       </div>
@@ -38,19 +38,19 @@ export default function Header() {
       <div className="flex lg:hidden items-center gap-2">
         <Globe2 className="w-5 h-5 text-accent" />
         <span className="font-display text-lg whitespace-nowrap">
-          <span className="font-semibold text-text">Wander</span>
+          <span className="font-semibold text-slate-900">Wander</span>
           <span className="font-semibold text-accent">AI</span>
         </span>
       </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        <span className="hidden lg:inline-block text-sm text-muted font-sans mr-2">
+        <span className="hidden lg:inline-block text-sm text-slate-500 font-sans mr-2">
           {getGreeting()}, {firstName}
         </span>
         
         <div className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-surface2 cursor-pointer transition-colors">
-          <Bell className="w-5 h-5 text-muted hover:text-text/80 transition-colors" />
+          <Bell className="w-5 h-5 text-slate-400 hover:text-slate-700 transition-colors" />
         </div>
         
         <Avatar user={user} size="sm" />

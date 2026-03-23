@@ -13,8 +13,8 @@ export default function AppShell() {
       <div className="flex flex-col flex-1 overflow-hidden relative">
         <Header />
         
-        {/* Scrollable content area */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 pb-24 lg:pb-8">
+        {/* Scrollable content area - bg-surface2 provides subtle off-white contrast */}
+        <main className="flex-1 overflow-y-auto bg-surface2 p-6 lg:p-8 pb-24 lg:pb-8">
           <Outlet />
         </main>
       </div>
