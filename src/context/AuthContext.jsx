@@ -14,21 +14,26 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        await setDoc(doc(db, 'users', firebaseUser.uid), {
+        setLoading(false); // Unblock UI immediately
+        
+        // Fire and forget the user doc creation so network/ad-blocker issues don't freeze the app
+        setDoc(doc(db, 'users', firebaseUser.uid), {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
           createdAt: serverTimestamp(),
           tripsCount: 0,
-        }, { merge: true });
+        }, { merge: true }).catch((error) => {
+          console.error("Error writing user to Firestore:", error);
+        });
       } else {
         setUser(null);
+        setLoading(false); // Unblock UI
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
