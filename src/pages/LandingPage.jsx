@@ -1,33 +1,52 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Globe, Plane } from 'lucide-react';
+import { 
+  Globe2, 
+  Sparkles, 
+  Plane, 
+  MapPin, 
+  Compass, 
+  Mountain, 
+  Palmtree, 
+  Landmark, 
+  Waves,
+  BrainCircuit,
+  BookMarked,
+  SlidersHorizontal 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 
 const destinations = [
-  { name: 'Paris', emoji: '🗼', x: '10%', y: '20%', delay: '0s' },
-  { name: 'Tokyo', emoji: '🗾', x: '80%', y: '15%', delay: '1.5s' },
-  { name: 'Bali', emoji: '🌴', x: '85%', y: '60%', delay: '3s' },
-  { name: 'Patagonia', emoji: '🏔️', x: '5%', y: '65%', delay: '2s' },
-  { name: 'Rome', emoji: '🏛️', x: '70%', y: '75%', delay: '4s' },
-  { name: 'Maldives', emoji: '🌊', x: '15%', y: '80%', delay: '2.5s' },
+  { name: 'Paris', icon: MapPin, textClass: 'text-accent', animation: 'floatA', delay: '0s', top: '20%', left: '8%' },
+  { name: 'Tokyo', icon: Compass, textClass: 'text-accent3', animation: 'floatB', delay: '1s', top: '18%', right: '10%' },
+  { name: 'Patagonia', icon: Mountain, textClass: 'text-accent2', animation: 'floatC', delay: '0.5s', top: '55%', left: '5%' },
+  { name: 'Bali', icon: Palmtree, textClass: 'text-success', animation: 'floatA', delay: '1.5s', top: '60%', right: '8%' },
+  { name: 'Rome', icon: Landmark, textClass: 'text-warning', animation: 'floatB', delay: '2s', top: '38%', left: '12%' },
+  { name: 'Maldives', icon: Waves, textClass: 'text-accent3', animation: 'floatC', delay: '0.8s', top: '75%', right: '15%' },
 ];
 
 const features = [
   {
-    icon: '🤖',
+    icon: BrainCircuit,
     title: 'AI Itineraries',
     description: 'Describe your trip in plain English. Get a complete day-by-day plan instantly.',
+    iconBg: 'rgba(108, 99, 255, 0.15)',
+    iconColor: '#6C63FF'
   },
   {
-    icon: '💾',
+    icon: BookMarked,
     title: 'Save & Manage',
     description: 'All your trips in one place. Edit, revisit, and share your itineraries anytime.',
+    iconBg: 'rgba(67, 232, 216, 0.12)',
+    iconColor: '#43E8D8'
   },
   {
-    icon: '🎯',
+    icon: SlidersHorizontal,
     title: 'Personalized',
     description: 'Tailored to your budget, interests, travel style, and group size.',
+    iconBg: 'rgba(255, 101, 132, 0.12)',
+    iconColor: '#FF6584'
   },
 ];
 
@@ -59,126 +78,212 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg relative overflow-hidden">
-      <div className="fixed inset-0 z-0">
-        <div className="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[120px] animate-[drift1_18s_ease-in-out_infinite] top-[-10%] left-[-5%] bg-accent" />
-        <div className="absolute w-[500px] h-[500px] rounded-full opacity-15 blur-[120px] animate-[drift2_15s_ease-in-out_infinite] top-[40%] right-[-10%] bg-accent2" />
-        <div className="absolute w-[400px] h-[400px] rounded-full opacity-15 blur-[120px] animate-[drift3_20s_ease-in-out_infinite] bottom-[-10%] left-[30%] bg-accent3" />
-      </div>
+    <div className="min-h-screen bg-bg relative selection:bg-accent/30 selection:text-white">
+      {/* Z-0: Background Orbs & Noise */}
+      <div className="noise-overlay" />
+      <div 
+        className="absolute z-0 rounded-full" 
+        style={{
+          top: '-200px', left: '-200px', width: '600px', height: '600px',
+          background: 'radial-gradient(circle, rgba(108, 99, 255, 0.15) 0%, transparent 70%)',
+          animation: 'drift1 18s ease-in-out infinite alternate'
+        }} 
+      />
+      <div 
+        className="absolute z-0 rounded-full" 
+        style={{
+          bottom: '-150px', right: '-100px', width: '500px', height: '500px',
+          background: 'radial-gradient(circle, rgba(255, 101, 132, 0.10) 0%, transparent 70%)',
+          animation: 'drift2 22s ease-in-out infinite alternate'
+        }} 
+      />
+      <div 
+        className="absolute z-0 rounded-full" 
+        style={{
+          top: '40%', right: '10%', width: '300px', height: '300px',
+          background: 'radial-gradient(circle, rgba(67, 232, 216, 0.08) 0%, transparent 70%)',
+          animation: 'drift3 15s ease-in-out infinite alternate'
+        }} 
+      />
 
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border">
+      {/* Z-50: Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0F]/75 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Globe className="w-6 h-6 text-accent" />
-            <span className="font-display text-xl font-semibold text-text">WanderAI</span>
+            <Globe2 className="w-6 h-6 text-accent" />
+            <span className="font-display text-xl whitespace-nowrap">
+              <span className="font-semibold text-text">Wander</span>
+              <span className="font-semibold text-accent">AI</span>
+            </span>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSignIn} loading={authLoading}>
+          <button 
+            disabled={authLoading}
+            onClick={handleSignIn}
+            className="border border-white/20 bg-transparent text-white/80 px-5 py-2 rounded-lg text-sm hover:border-accent hover:text-white hover:bg-accent/10 transition-all duration-200 cursor-pointer"
+          >
             Sign In
-          </Button>
+          </button>
         </div>
       </nav>
 
-      {destinations.map((dest) => (
-        <div
-          key={dest.name}
-          className="absolute z-[1] opacity-30 blur-[1px] pointer-events-none"
-          style={{
-            left: dest.x,
-            top: dest.y,
-            animation: `float 6s ease-in-out infinite`,
-            animationDelay: dest.delay,
-          }}
-        >
-          <div className="bg-surface2/60 backdrop-blur-sm border border-border rounded-card px-4 py-3 flex items-center gap-2">
-            <span className="text-xl">{dest.emoji}</span>
-            <span className="font-sans text-sm text-text">{dest.name}</span>
-          </div>
-        </div>
-      ))}
-
-      <section className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 pt-16 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent/30 bg-accent/10 mb-8">
-          <span className="text-sm">✨</span>
-          <span className="font-sans text-sm text-accent">AI-Powered Travel Planning</span>
-        </div>
-
-        <h1 className="font-display text-5xl md:text-7xl font-bold text-text leading-tight mb-6 max-w-4xl">
-          Plan Your Dream Trip{' '}
-          <br className="hidden md:block" />
-          with{' '}
-          <span className="bg-gradient-to-r from-accent via-accent2 to-accent3 bg-clip-text text-transparent">
-            Intelligence
-          </span>
-        </h1>
-
-        <p className="font-sans text-lg md:text-xl text-muted max-w-2xl mb-10 leading-relaxed">
-          Describe where you want to go. Our AI builds a complete,
-          personalized day-by-day itinerary in seconds.
-        </p>
-
-        <Button size="lg" onClick={handleSignIn} loading={authLoading}>
-          <Plane className="w-5 h-5" />
-          Start Planning for Free →
-        </Button>
-
-        {authError && (
-          <p className="mt-4 text-accent2 font-sans text-sm">{authError}</p>
-        )}
-
-        <p className="mt-6 font-sans text-sm text-muted">
-          Free to use · No credit card required · Powered by AI
-        </p>
-      </section>
-
-      <section className="relative z-10 py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-text text-center mb-16">
-            Everything you need to travel smarter
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-surface2/60 backdrop-blur-lg border border-border rounded-card p-8 hover:border-accent/40 transition-all duration-300 hover:translate-y-[-4px]"
+      {/* Hero Section */}
+      <section className="relative min-h-screen max-h-screen flex flex-col items-center justify-center pb-8">
+        {/* Floating Cards (Z-0) */}
+        {destinations.map((dest) => {
+          const Icon = dest.icon;
+          return (
+            <div
+              key={dest.name}
+              className="absolute z-0 pointer-events-none opacity-55"
+              style={{
+                left: dest.left,
+                top: dest.top,
+                right: dest.right,
+                animation: `${dest.animation} 14s ease-in-out infinite`,
+                animationDelay: dest.delay,
+              }}
+            >
+              <div 
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl backdrop-blur-[10px]"
+                style={{
+                  background: 'rgba(28, 28, 39, 0.7)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
               >
-                <span className="text-4xl mb-6 block">{feature.icon}</span>
-                <h3 className="font-display text-xl font-semibold text-text mb-3">
-                  {feature.title}
-                </h3>
-                <p className="font-sans text-muted leading-relaxed">
-                  {feature.description}
-                </p>
+                <Icon className={`w-4 h-4 ${dest.textClass}`} strokeWidth={2.5} />
+                <span className="font-mono text-sm text-text/60">{dest.name}</span>
               </div>
-            ))}
+            </div>
+          );
+        })}
+
+        {/* Z-10: Hero Content */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-6 pt-20">
+          <div 
+            className="inline-flex items-center px-4 py-1.5 rounded-full border mb-8 animate-fade-in"
+            style={{
+              background: 'rgba(108, 99, 255, 0.12)',
+              borderColor: 'rgba(108, 99, 255, 0.3)',
+              animationDelay: '0.1s'
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-accent" />
+            <span className="font-sans text-sm font-medium text-accent">AI-Powered Travel Planning</span>
+          </div>
+
+          <h1 
+            className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6 max-w-3xl mx-auto animate-fade-in-up"
+            style={{ animationDelay: '0.2s' }}
+          >
+            <span className="text-text">Plan Your Dream Trip</span>
+            <br />
+            <span className="text-text">with </span>
+            <span className="bg-gradient-to-r from-[#6C63FF] via-[#FF6584] to-[#43E8D8] bg-clip-text text-transparent [-webkit-text-fill-color:transparent]">
+              Intelligence
+            </span>
+          </h1>
+
+          <p 
+            className="font-sans text-lg text-muted max-w-lg mx-auto mb-10 leading-relaxed animate-fade-in-up"
+            style={{ animationDelay: '0.35s' }}
+          >
+            Describe where you want to go. Our AI builds a complete,
+            personalized day-by-day itinerary in seconds.
+          </p>
+
+          <div className="animate-fade-in-up flex flex-col items-center" style={{ animationDelay: '0.5s' }}>
+            <Button 
+              size="lg" 
+              onClick={handleSignIn} 
+              loading={authLoading}
+              className="h-14 px-8 bg-accent text-white font-semibold rounded-xl hover:scale-105 active:scale-98 transition-all duration-250 hover:shadow-[0_0_30px_rgba(108,99,255,0.4),_0_0_60px_rgba(108,99,255,0.15)]"
+            >
+              {!authLoading && <Plane className="w-4 h-4 mr-2" />}
+              Start Planning for Free →
+            </Button>
+
+            <div className="h-8 mt-3">
+              {authError && (
+                <p className="text-accent2 text-sm animate-fade-in">
+                  {authError}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <p 
+            className="mt-6 font-sans text-sm text-muted/60 animate-fade-in"
+            style={{ animationDelay: '0.7s' }}
+          >
+            Free to use <span className="px-2">·</span> No credit card required <span className="px-2">·</span> Powered by AI
+          </p>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div className="relative z-10 flex items-center gap-4 max-w-xs mx-auto my-16">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <Globe2 size={18} className="text-accent/50 shrink-0" />
+        <div className="flex-1 h-px bg-gradient-to-l from-transparent via-accent/30 to-transparent" />
+      </div>
+
+      {/* Features Section */}
+      <section className="relative z-10 pt-8 pb-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-16">
+            <h2 className="font-display text-4xl font-semibold text-text text-center">
+              Everything you need to travel smarter
+            </h2>
+            <p className="font-sans text-muted text-center text-base mt-3">
+              From idea to full itinerary — in under 30 seconds.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={feature.title}
+                  className="p-7 rounded-2xl backdrop-blur-[8px] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] group"
+                  style={{
+                    background: 'rgba(19, 19, 26, 0.8)',
+                    border: '1px solid rgba(42, 42, 56, 0.8)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(108, 99, 255, 0.3)';
+                    e.currentTarget.style.background = 'rgba(28, 28, 39, 0.9)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(42, 42, 56, 0.8)';
+                    e.currentTarget.style.background = 'rgba(19, 19, 26, 0.8)';
+                  }}
+                >
+                  <div 
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                    style={{ backgroundColor: feature.iconBg }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: feature.iconColor }} />
+                  </div>
+                  <h3 className="font-display text-xl font-semibold text-text mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="font-sans text-muted text-sm leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <footer className="relative z-10 py-8 text-center border-t border-border">
-        <p className="font-sans text-sm text-muted">
+      {/* Footer */}
+      <footer className="relative z-10 py-10 text-center border-t border-border/40">
+        <p className="font-sans text-sm text-muted/50">
           © 2025 WanderAI · Built with ❤️ and AI
         </p>
       </footer>
-
-      <style>{`
-        @keyframes drift1 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(60px, 40px); }
-        }
-        @keyframes drift2 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(-50px, 30px); }
-        }
-        @keyframes drift3 {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(40px, -50px); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(2deg); }
-        }
-      `}</style>
     </div>
   );
 }
