@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { useAuth } from '../context/AuthContext';
-import { generateItinerary } from '../services/groqService';
+import { useState } from "react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { useAuth } from "../context/AuthContext";
+import { generateItinerary } from "../services/groqService";
 
 const initialFormData = {
-  destination: '',
+  destination: "",
   flexibleDates: false,
-  startDate: '',
-  endDate: '',
+  startDate: "",
+  endDate: "",
   duration: 7,
   adults: 2,
   children: 0,
-  tripType: '',
+  tripType: "",
   interests: [],
-  budget: '',
-  specialRequests: '',
+  budget: "",
+  specialRequests: "",
 };
 
 const statuses = [
@@ -23,7 +23,7 @@ const statuses = [
   "Crafting your day-by-day itinerary...",
   "Finding hidden gems and local tips...",
   "Calculating your budget breakdown...",
-  "Finalising your perfect trip..."
+  "Finalising your perfect trip...",
 ];
 
 export function useTrip() {
@@ -35,6 +35,7 @@ export function useTrip() {
   const [itinerary, setItinerary] = useState(null);
   const [error, setError] = useState(null);
   const [savedTripId, setSavedTripId] = useState(null);
+  const [retryError, setRetryError] = useState(null);
 
   const updateFormData = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -64,7 +65,7 @@ export function useTrip() {
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           duration: formData.duration,
-          status: 'upcoming',
+          status: "upcoming",
           travelers: { adults: formData.adults, children: formData.children },
           tripType: formData.tripType,
           interests: formData.interests,
@@ -76,25 +77,38 @@ export function useTrip() {
           isPublic: false,
         };
 
-        const dbPromise = addDoc(collection(db, 'trips'), tripData);
-        
+        const dbPromise = addDoc(collection(db, "trips"), tripData);
+
         // 5-second timeout to prevent infinite hang if Firestore is blocked by an adblocker
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Firestore connection timeout')), 5000)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Firestore connection timeout")),
+            5000,
+          ),
         );
 
         const docRef = await Promise.race([dbPromise, timeoutPromise]);
         setSavedTripId(docRef.id);
       } catch (dbErr) {
-        console.error('Error saving trip to Firestore:', dbErr);
-        // Do not block user flow just because save failed. Allow them to see the trip locally.
-        setSavedTripId('local-trip-temp'); // temporary ID to satisfy complete state
-        setError("Trip couldn't be saved properly, but you can still view it right now. Please check your internet connection or adblocker.");
+        console.error("Error saving trip to Firestore:", dbErr);
+        // Store the generated itinerary in sessionStorage as backup
+        const localTripData = {
+          formData,
+          itinerary: generatedItinerary,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem("pendingTrip", JSON.stringify(localTripData));
+        // Use temporary ID to navigate to trip detail
+        setSavedTripId("local-trip-temp");
+        setError(
+          "Trip couldn't be saved to your account, but you can still view it now. Check your internet connection or adblocker settings, then try saving again.",
+        );
       }
-
     } catch (err) {
       console.error("Trip generation error:", err);
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      setError(
+        err.message || "An unexpected error occurred. Please try again.",
+      );
     } finally {
       clearInterval(interval);
       setIsGenerating(false);
@@ -103,6 +117,50 @@ export function useTrip() {
 
   const generatingStatus = statuses[statusIndex];
 
+  const retrySaveTrip = async (tripId) => {
+    if (!itinerary) return;
+    setRetryError(null);
+
+    try {
+      const tripData = {
+        userId: user.uid,
+        tripName: itinerary.tripTitle,
+        destination: formData.destination,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
+        duration: formData.duration,
+        status: "upcoming",
+        travelers: { adults: formData.adults, children: formData.children },
+        tripType: formData.tripType,
+        interests: formData.interests,
+        budget: formData.budget,
+        specialRequests: formData.specialRequests,
+        itinerary,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isPublic: false,
+      };
+
+      const dbPromise = addDoc(collection(db, "trips"), tripData);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Firestore connection timeout")),
+          5000,
+        ),
+      );
+
+      const docRef = await Promise.race([dbPromise, timeoutPromise]);
+      setSavedTripId(docRef.id);
+      setError(null);
+      sessionStorage.removeItem("pendingTrip");
+    } catch (err) {
+      console.error("Error retrying save:", err);
+      setRetryError(
+        err.message || "Failed to save trip. Please check your connection.",
+      );
+    }
+  };
+
   return {
     formData,
     updateFormData,
@@ -110,10 +168,12 @@ export function useTrip() {
     nextStep,
     prevStep,
     isGenerating,
-    generatingStatus,
+    generatingStatus: statuses[statusIndex],
     itinerary,
     error,
     generateTrip,
     savedTripId,
+    retrySaveTrip,
+    retryError,
   };
 }
