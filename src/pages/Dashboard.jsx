@@ -13,12 +13,11 @@ import Button from "../components/ui/Button";
 import StatsCard from "../components/dashboard/StatsCard";
 import QuickPlanCard from "../components/dashboard/QuickPlanCard";
 import TripCard from "../components/dashboard/TripCard";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { trips, loading, error, stats } = useUserTrips();
+  const { trips, recentTrips, isRefreshing, error, stats } = useUserTrips();
 
   const firstName = user?.displayName?.split(" ")[0] || "Traveler";
 
@@ -61,13 +60,6 @@ export default function Dashboard() {
     },
   ];
 
-  // Get recent 3 trips (sorted by creation date, newest first)
-  const recentTrips = trips
-    .sort(
-      (a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0),
-    )
-    .slice(0, 3);
-
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Section 1: Welcome Header */}
@@ -87,24 +79,24 @@ export default function Dashboard() {
       </section>
 
       {/* Section 2: Stats Row */}
-      {loading ? (
-        <div className="flex items-center justify-center min-h-24">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : (
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {dashboardStats.map((stat, idx) => (
-            <StatsCard
-              key={stat.label}
-              {...stat}
-              style={{
-                animation: "slideInUp 0.4s ease forwards",
-                animationDelay: `${0.05 * idx}s`,
-                opacity: 0,
-              }}
-            />
-          ))}
-        </section>
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {dashboardStats.map((stat, idx) => (
+          <StatsCard
+            key={stat.label}
+            {...stat}
+            style={{
+              animation: "slideInUp 0.4s ease forwards",
+              animationDelay: `${0.05 * idx}s`,
+              opacity: 0,
+            }}
+          />
+        ))}
+      </section>
+
+      {isRefreshing && (
+        <p className="text-xs font-mono text-slate-400 -mt-4">
+          Syncing your trips...
+        </p>
       )}
 
       {/* Section 3: Error Alert (if any) */}
@@ -138,11 +130,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center min-h-24 bg-white border border-slate-200 border-dashed rounded-2xl">
-              <LoadingSpinner size="md" />
-            </div>
-          ) : recentTrips.length === 0 ? (
+          {recentTrips.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 bg-white border border-slate-200 border-dashed rounded-2xl p-10 min-h-[200px] flex-1">
               <MapPin className="w-12 h-12 text-slate-300" />
               <div className="text-center max-w-xs">

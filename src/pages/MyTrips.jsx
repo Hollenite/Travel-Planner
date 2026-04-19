@@ -10,16 +10,13 @@ import {
 } from "lucide-react";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
-import { useAuth } from "../context/AuthContext";
 import { useUserTrips } from "../hooks/useUserTrips";
 import TripCard from "../components/dashboard/TripCard";
 import Button from "../components/ui/Button";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function MyTrips() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { trips, loading, error } = useUserTrips();
+  const { trips, isRefreshing, error } = useUserTrips();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent"); // recent, title, destination, status
   const [filterStatus, setFilterStatus] = useState("all"); // all, upcoming, ongoing, completed
@@ -42,10 +39,7 @@ export default function MyTrips() {
 
     // Sort trips
     if (sortBy === "recent") {
-      filtered.sort(
-        (a, b) =>
-          (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0),
-      );
+      filtered.sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
     } else if (sortBy === "title") {
       filtered.sort((a, b) =>
         (a.tripName || "").localeCompare(b.tripName || ""),
@@ -84,14 +78,6 @@ export default function MyTrips() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-full flex items-center justify-center bg-surface2">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
   return (
     <div className="bg-surface2 min-h-full py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -112,6 +98,10 @@ export default function MyTrips() {
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800 font-sans">{error}</p>
           </div>
+        )}
+
+        {isRefreshing && (
+          <p className="text-xs font-mono text-slate-400">Syncing your trips...</p>
         )}
 
         {/* Controls Row */}

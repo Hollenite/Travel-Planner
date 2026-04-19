@@ -24,21 +24,24 @@ const getStatusStyle = (status) => {
   }
 };
 
-const formatDateRange = (start, end) => {
-  if (!start) return 'Dates not set';
-  
-  // Quick formatter to mock the timestamp -> string conversion for Phase 2
-  const format = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const formatDateRange = (startMs, endMs) => {
+  if (!startMs) return 'Dates not set';
+
+  const format = (value) => {
+    if (!value) return '';
+    return new Date(value).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
   };
-  
-  if (start && !end) return format(start);
-  return `${format(start)} – ${format(end)}, ${new Date(start).getFullYear()}`;
+
+  if (!endMs) return format(startMs);
+  return `${format(startMs)} – ${format(endMs)}, ${new Date(startMs).getFullYear()}`;
 };
 
 export default function TripCard({ trip }) {
+  const travelerCount = (trip.travelers?.adults ?? 0) + (trip.travelers?.children ?? 0);
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 cursor-pointer hover:border-[rgba(20,184,166,0.35)] hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
       
@@ -70,14 +73,12 @@ export default function TripCard({ trip }) {
         </div>
         
         <div className="text-xs text-slate-400 font-mono mt-1 truncate">
-          {formatDateRange(trip.startDate, trip.endDate)}
+          {formatDateRange(trip.startDateMs, trip.endDateMs)}
         </div>
-        
+
         <div className="flex items-center gap-1 mt-2 text-xs text-slate-400">
           <Users className="w-3 h-3 shrink-0" />
-          <span>
-            {trip.travelers.adults + trip.travelers.children} traveler(s)
-          </span>
+          <span>{travelerCount} traveler(s)</span>
         </div>
       </div>
 
