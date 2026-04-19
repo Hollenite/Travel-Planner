@@ -1,5 +1,42 @@
 import { MapPin, CalendarDays, Users, Wallet, Tag, Share2, Download } from 'lucide-react';
 
+const toDateValue = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (typeof value.toDate === 'function') return value.toDate().getTime();
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const getTravelerCount = (trip) =>
+  (trip.travelers?.adults ?? 0) + (trip.travelers?.children ?? 0);
+
+const formatBudget = (budget) => budget || 'Flexible budget';
+
+const formatTripType = (tripType) => tripType || 'Custom trip';
+
+const formatButtonLabel = (isExportingPdf) =>
+  isExportingPdf ? 'Exporting...' : 'Export PDF';
+
+const getStartValue = (trip) => trip.startDateMs ?? toDateValue(trip.startDate);
+const getEndValue = (trip) => trip.endDateMs ?? toDateValue(trip.endDate);
+
+const onShareClick = () => {
+  window.alert('Share is not available yet.');
+};
+
+const getExportDisabled = (isExportingPdf, onExportPdf) =>
+  isExportingPdf || typeof onExportPdf !== 'function';
+
+const handleExportClick = (onExportPdf) => {
+  if (typeof onExportPdf === 'function') {
+    onExportPdf();
+  }
+};
+
+const getTravelerLabel = (trip) => `${getTravelerCount(trip)} traveler(s)`;
+
 const getGradientStyle = (str = '') => {
   const hash = str.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const gradients = [
@@ -20,9 +57,17 @@ const formatDateRange = (start, end) => {
   return `${format(start)} – ${format(end)}`;
 };
 
-export default function TripHeader({ trip, itinerary }) {
+export default function TripHeader({
+  trip,
+  itinerary,
+  onExportPdf,
+  isExportingPdf = false,
+}) {
   if (!trip || !itinerary) return null;
 
+  const startValue = getStartValue(trip);
+  const endValue = getEndValue(trip);
+  const exportDisabled = getExportDisabled(isExportingPdf, onExportPdf);
   const bgGradient = getGradientStyle(trip.destination || itinerary.destination);
 
   return (
@@ -53,28 +98,35 @@ export default function TripHeader({ trip, itinerary }) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-1.5 text-sm font-sans text-slate-600">
             <CalendarDays className="w-4 h-4 text-slate-400 shrink-0" />
-            {formatDateRange(trip.startDate, trip.endDate)}
+            {formatDateRange(startValue, endValue)}
           </div>
           <div className="flex items-center gap-1.5 text-sm font-sans text-slate-600">
             <Users className="w-4 h-4 text-slate-400 shrink-0" />
-            {trip.travelers.adults + trip.travelers.children} traveler(s)
+            {getTravelerLabel(trip)}
           </div>
           <div className="flex items-center gap-1.5 text-sm font-sans text-slate-600">
             <Wallet className="w-4 h-4 text-slate-400 shrink-0" />
-            {trip.budget || 'Flexible budget'}
+            {formatBudget(trip.budget)}
           </div>
           <div className="flex items-center gap-1.5 text-sm font-sans text-slate-600">
             <Tag className="w-4 h-4 text-slate-400 shrink-0" />
-            {trip.tripType}
+            {formatTripType(trip.tripType)}
           </div>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-surface2 text-slate-600 font-sans text-sm transition-colors">
+          <button
+            onClick={onShareClick}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-surface2 text-slate-600 font-sans text-sm transition-colors"
+          >
             <Share2 className="w-4 h-4" /> Share
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-surface2 text-slate-600 font-sans text-sm transition-colors">
-            <Download className="w-4 h-4" /> Export PDF
+          <button
+            onClick={() => handleExportClick(onExportPdf)}
+            disabled={exportDisabled}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-surface2 text-slate-600 font-sans text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" /> {formatButtonLabel(isExportingPdf)}
           </button>
         </div>
 

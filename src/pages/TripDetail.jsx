@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  addDoc,
-  collection,
-  serverTimestamp,
-} from "firebase/firestore";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { db } from "../config/firebase";
 import { useAuth } from "../context/AuthContext";
-import { Edit2, Save, X, AlertCircle } from "lucide-react";
+import { normalizeTrip } from "../hooks/useUserTrips";
+import {
+  clearPendingTrip,
+  fetchTripById,
+  getCachedTripById,
+  getPendingTrip,
+  savePendingTripToAccount,
+} from "../hooks/useTrip";
+import { Edit2, Save, AlertCircle } from "lucide-react";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 import TripHeader from "../components/itinerary/TripHeader";
@@ -22,16 +25,46 @@ import DayCard from "../components/itinerary/DayCard";
 import QuickTipsSection from "../components/itinerary/QuickTipsSection";
 import PackingList from "../components/itinerary/PackingList";
 
+const createRecoveredTrip = (pendingTrip, userId) => {
+  const { formData, itinerary, pendingTripId } = pendingTrip;
+
+  return normalizeTrip({
+    id: "local-trip-temp",
+    pendingTripId,
+    tripName: itinerary.tripTitle,
+    destination: formData.destination,
+    startDate: formData.startDate || null,
+    endDate: formData.endDate || null,
+    duration: formData.duration,
+    status: "upcoming",
+    travelers: {
+      adults: formData.adults,
+      children: formData.children,
+    },
+    tripType: formData.tripType,
+    interests: formData.interests,
+    budget: formData.budget,
+    specialRequests: formData.specialRequests,
+    itinerary,
+    isPublic: false,
+    userId,
+  });
+};
+
 export default function TripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const exportRef = useRef(null);
 
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -39,110 +72,97 @@ export default function TripDetail() {
   const [retryMessage, setRetryMessage] = useState("");
 
   useEffect(() => {
-    async function fetchTrip() {
+    if (!user || !id) return;
+
+    const hydratedTrip = (() => {
+      if (id === "local-trip-temp") {
+        const pendingTrip = getPendingTrip();
+        return pendingTrip ? createRecoveredTrip(pendingTrip, user.uid) : null;
+      }
+
+      if (location.state?.trip?.id === id) {
+        return normalizeTrip(location.state.trip);
+      }
+
+      const cachedTrip = getCachedTripById(id, user.uid);
+      return cachedTrip ? normalizeTrip(cachedTrip) : null;
+    })();
+
+    if (hydratedTrip) {
+      setTrip(hydratedTrip);
+      setEditStatus(hydratedTrip.status || "upcoming");
+      setEditNotes(hydratedTrip.notes || "");
+      setLoading(false);
+      setIsRefreshing(id !== "local-trip-temp");
+      setError(null);
+    } else {
+      setLoading(true);
+      setIsRefreshing(true);
+    }
+
+    async function loadTrip() {
       try {
-        // If the trip ID is a local mock ID from a failed save, try to recover from sessionStorage
         if (id === "local-trip-temp") {
-          const pendingData = sessionStorage.getItem("pendingTrip");
-          if (pendingData) {
-            try {
-              const { formData: formDataBackup, itinerary } =
-                JSON.parse(pendingData);
-              // Create a trip object from the pending data
-              const recoveredTrip = {
-                id: "local-trip-temp",
-                tripName: itinerary.tripTitle,
-                destination: formDataBackup.destination,
-                startDate: formDataBackup.startDate || null,
-                endDate: formDataBackup.endDate || null,
-                duration: formDataBackup.duration,
-                status: "upcoming",
-                travelers: {
-                  adults: formDataBackup.adults,
-                  children: formDataBackup.children,
-                },
-                tripType: formDataBackup.tripType,
-                interests: formDataBackup.interests,
-                budget: formDataBackup.budget,
-                specialRequests: formDataBackup.specialRequests,
-                itinerary,
-                isPublic: false,
-                userId: user?.uid,
-              };
-              setTrip(recoveredTrip);
-              setEditStatus("upcoming");
-              setEditNotes("");
-              setError(null);
-              setLoading(false);
-              return;
-            } catch (parseErr) {
-              console.error("Error parsing pending trip data:", parseErr);
-            }
+          if (!hydratedTrip) {
+            setError(
+              "We couldn't save this trip to your account. Your trip data may have been lost. Please check your internet connection or adblocker settings and try planning again.",
+            );
           }
-          setError(
-            "We couldn't save this trip to your account. Your trip data may have been lost. Please check your internet connection or adblocker settings and try planning again.",
-          );
-          setLoading(false);
           return;
         }
 
-        const docRef = doc(db, "trips", id);
-        const docSnap = await getDoc(docRef);
+        const fetchedTrip = await fetchTripById(id);
 
-        if (docSnap.exists()) {
-          const tripData = { id: docSnap.id, ...docSnap.data() };
-          // Secure route: only owner can view, unless public (we'll enforce owner-only for now)
-          if (tripData.userId !== user.uid && !tripData.isPublic) {
-            navigate("/dashboard", { replace: true });
-            return;
-          }
-          setTrip(tripData);
-          setEditStatus(tripData.status || "upcoming");
-          setEditNotes(tripData.notes || "");
-        } else {
-          // Trip doesn't exist
+        if (!fetchedTrip) {
           navigate("/trips", { replace: true });
+          return;
         }
-      } catch (err) {
-        console.error("Error fetching trip:", err);
-        setError("Could not load trip details.");
+
+        if (fetchedTrip.userId !== user.uid && !fetchedTrip.isPublic) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        const normalizedTrip = normalizeTrip(fetchedTrip);
+        setTrip(normalizedTrip);
+        setEditStatus(normalizedTrip.status || "upcoming");
+        setEditNotes(normalizedTrip.notes || "");
+        setError(null);
+      } catch (fetchError) {
+        console.error("Error fetching trip:", fetchError);
+        if (!hydratedTrip) {
+          setError("Could not load trip details.");
+        }
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     }
 
-    if (user) {
-      fetchTrip();
-    }
-  }, [id, user, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-full flex items-center justify-center bg-surface2">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+    loadTrip();
+  }, [id, user, navigate, location.state]);
 
   const handleSaveChanges = async () => {
     try {
       setIsSaving(true);
       setSaveSuccess(false);
 
-      await updateDoc(doc(db, "trips", trip.id), {
-        status: editStatus,
-        notes: editNotes,
-        updatedAt: new Date(),
-      });
+      await setDoc(
+        doc(db, "trips", trip.id),
+        {
+          status: editStatus,
+          notes: editNotes,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
 
-      setTrip({ ...trip, status: editStatus, notes: editNotes });
+      setTrip((prev) => ({ ...prev, status: editStatus, notes: editNotes }));
       setSaveSuccess(true);
       setIsEditing(false);
-
-      // Clear success message after 3 seconds
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error("Error saving trip:", err);
+    } catch (saveError) {
+      console.error("Error saving trip:", saveError);
       setError("Failed to save changes. Please try again.");
     } finally {
       setIsSaving(false);
@@ -154,41 +174,66 @@ export default function TripDetail() {
       setRetrying(true);
       setRetryMessage("");
 
-      const tripData = {
-        userId: user.uid,
-        tripName: trip.tripName,
-        destination: trip.destination,
-        startDate: trip.startDate || null,
-        endDate: trip.endDate || null,
-        duration: trip.duration,
-        status: trip.status,
-        travelers: trip.travelers,
-        tripType: trip.tripType,
-        interests: trip.interests,
-        budget: trip.budget,
-        specialRequests: trip.specialRequests,
-        itinerary: trip.itinerary,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        isPublic: false,
-      };
+      const pendingTrip = getPendingTrip();
+      const savedTripId = await savePendingTripToAccount(pendingTrip, user.uid);
 
-      const docRef = await addDoc(collection(db, "trips"), tripData);
-
-      // Update trip with real ID
-      setTrip({ ...trip, id: docRef.id });
-      sessionStorage.removeItem("pendingTrip");
+      clearPendingTrip();
       setRetryMessage("Trip saved successfully!");
       setTimeout(() => {
-        navigate(`/trip/${docRef.id}`, { replace: true });
-      }, 1000);
-    } catch (err) {
-      console.error("Error retrying save:", err);
+        navigate(`/trip/${savedTripId}`, { replace: true });
+      }, 600);
+    } catch (retryError) {
+      console.error("Error retrying save:", retryError);
       setRetryMessage(
-        "Failed to save trip. Please check your connection and try again.",
+        retryError.message ||
+          "Failed to save trip. Please check your connection and try again.",
       );
     } finally {
       setRetrying(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!exportRef.current || !trip) return;
+
+    try {
+      setIsExportingPdf(true);
+      const canvas = await html2canvas(exportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#f8fafc",
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      const imageData = canvas.toDataURL("image/png");
+      pdf.addImage(imageData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imageData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `${(trip.tripName || trip.destination || "trip-itinerary")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "trip-itinerary"}.pdf`;
+
+      pdf.save(fileName);
+    } catch (pdfError) {
+      console.error("Error exporting PDF:", pdfError);
+      setError("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -198,7 +243,7 @@ export default function TripDetail() {
     setIsEditing(false);
   };
 
-  if (loading) {
+  if (loading && !trip) {
     return (
       <div className="min-h-full flex items-center justify-center bg-surface2">
         <LoadingSpinner size="lg" />
@@ -206,7 +251,7 @@ export default function TripDetail() {
     );
   }
 
-  if (error || !trip) {
+  if (error && !trip) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center bg-surface2 px-4">
         <AlertCircle className="w-12 h-12 text-amber-600 mb-4" />
@@ -225,15 +270,23 @@ export default function TripDetail() {
     );
   }
 
-  const { itinerary } = trip;
-  const isLocalTrip = trip.id === "local-trip-temp";
+  const itinerary = trip?.itinerary;
+  const isLocalTrip = trip?.id === "local-trip-temp";
 
   return (
     <div className="bg-surface2 min-h-full">
-      <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
-        <TripHeader trip={trip} itinerary={itinerary} />
+      <div ref={exportRef} className="max-w-4xl mx-auto py-8 px-4 space-y-6">
+        <TripHeader
+          trip={trip}
+          itinerary={itinerary}
+          onExportPdf={handleExportPdf}
+          isExportingPdf={isExportingPdf}
+        />
 
-        {/* Success Message */}
+        {isRefreshing && (
+          <p className="text-xs font-mono text-slate-400">Refreshing trip details...</p>
+        )}
+
         {saveSuccess && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
             <div className="w-2 h-2 bg-green-500 rounded-full" />
@@ -243,7 +296,6 @@ export default function TripDetail() {
           </div>
         )}
 
-        {/* Error Alert */}
         {error && (
           <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -251,7 +303,6 @@ export default function TripDetail() {
           </div>
         )}
 
-        {/* Local Trip Warning with Retry */}
         {isLocalTrip && (
           <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -278,13 +329,12 @@ export default function TripDetail() {
           </div>
         )}
 
-        {/* Edit Section */}
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-semibold text-slate-900">
               Trip Details
             </h3>
-            {!isEditing && (
+            {!isEditing && !isLocalTrip && (
               <button
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-sans text-sm"
@@ -297,7 +347,6 @@ export default function TripDetail() {
 
           {isEditing ? (
             <div className="space-y-4">
-              {/* Status Field */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
                   Status
@@ -314,7 +363,6 @@ export default function TripDetail() {
                 </select>
               </div>
 
-              {/* Notes Field */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
                   Trip Notes
@@ -328,7 +376,6 @@ export default function TripDetail() {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3 justify-end pt-2">
                 <button
                   onClick={handleCancelEdit}
@@ -385,14 +432,8 @@ export default function TripDetail() {
         </div>
 
         <OverviewSection trip={trip} itinerary={itinerary} />
-
         <BudgetCard budget={itinerary.estimatedBudget} />
-
-        <ExpenseTracker
-          tripId={trip.id}
-          budgetEstimate={itinerary.estimatedBudget}
-        />
-
+        <ExpenseTracker tripId={trip.id} budgetEstimate={itinerary.estimatedBudget} />
         <DocumentManager tripId={trip.id} />
 
         {itinerary.days && itinerary.days.length > 0 && (
@@ -404,7 +445,6 @@ export default function TripDetail() {
         )}
 
         <QuickTipsSection tips={itinerary.quickTips} />
-
         <PackingList items={itinerary.packingList} tripId={trip.id} />
       </div>
     </div>

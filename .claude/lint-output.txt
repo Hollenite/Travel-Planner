@@ -1,0 +1,80 @@
+
+> travel-planner@0.0.0 lint
+> eslint .
+
+
+D:\PROJECTS\Travel-Planner\src\components\dashboard\StatsCard.jsx
+  1:43  error  'Icon' is defined but never used  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\components\itinerary\DayCard.jsx
+  16:41  error  'Icon' is defined but never used  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\components\itinerary\DocumentManager.jsx
+   31:5   error  'uploadDocument' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+   59:13  error  'docsRef' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u         no-unused-vars
+   99:14  error  'err' is defined but never used                                                                 no-unused-vars
+  110:14  error  'err' is defined but never used                                                                 no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\components\itinerary\ExpenseTracker.jsx
+  91:14  error  'err' is defined but never used  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\components\itinerary\PackingList.jsx
+  13:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  11 |       const saved = localStorage.getItem(`packing-${tripId}`);
+  12 |       if (saved) {
+> 13 |         setCheckedItems(new Set(JSON.parse(saved)));
+     |         ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  14 |       }
+  15 |     } catch (e) {
+  16 |       console.error('Failed to load packing list state', e);  react-hooks/set-state-in-effect
+
+D:\PROJECTS\Travel-Planner\src\components\layout\BottomNav.jsx
+  14:27  error  'Icon' is defined but never used  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\components\layout\Sidebar.jsx
+  14:26  error  'Icon' is defined but never used  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\context\AuthContext.jsx
+  8:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\PROJECTS\Travel-Planner\src\hooks\useDocuments.js
+  5:3  error  'getDocs' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\hooks\useExpenses.js
+  5:3  error  'where' is defined but never used. Allowed unused vars must match /^[A-Z_]/u    no-unused-vars
+  6:3  error  'getDocs' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\hooks\useTrip.js
+  118:9   error  'generatingStatus' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  120:32  error  'tripId' is defined but never used                                                                no-unused-vars
+
+D:\PROJECTS\Travel-Planner\src\hooks\useUserTrips.js
+   6:3  error  'getDocs' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  30:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  28 |   useEffect(() => {
+  29 |     if (!user) {
+> 30 |       setTrips([]);
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |       setLoading(false);
+  32 |       return;
+  33 |     }  react-hooks/set-state-in-effect
+
+D:\PROJECTS\Travel-Planner\src\pages\MyTrips.jsx
+  21:11  error  'user' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+✖ 19 problems (19 errors, 0 warnings)
+

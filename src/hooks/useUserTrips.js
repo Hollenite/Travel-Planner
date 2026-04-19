@@ -27,7 +27,7 @@ const toMilliseconds = (value) => {
   return null;
 };
 
-const normalizeTrip = (trip) => ({
+export const normalizeTrip = (trip) => ({
   ...trip,
   travelers: {
     adults: trip.travelers?.adults ?? 0,

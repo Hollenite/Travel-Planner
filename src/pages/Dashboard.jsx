@@ -154,7 +154,9 @@ export default function Dashboard() {
               {recentTrips.map((trip) => (
                 <div
                   key={trip.id}
-                  onClick={() => navigate(`/trip/${trip.id}`)}
+                  onClick={() =>
+                    navigate(`/trip/${trip.id}`, { state: { trip } })
+                  }
                   className="cursor-pointer"
                 >
                   <TripCard trip={trip} />

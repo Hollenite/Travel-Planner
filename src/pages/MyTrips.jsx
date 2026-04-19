@@ -183,7 +183,9 @@ export default function MyTrips() {
               <div key={trip.id} className="relative group">
                 {/* Trip Card */}
                 <div
-                  onClick={() => navigate(`/trip/${trip.id}`)}
+                  onClick={() =>
+                    navigate(`/trip/${trip.id}`, { state: { trip } })
+                  }
                   className="cursor-pointer"
                 >
                   <TripCard trip={trip} />
@@ -193,7 +195,9 @@ export default function MyTrips() {
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   {/* Edit Button */}
                   <button
-                    onClick={() => navigate(`/trip/${trip.id}`)}
+                    onClick={() =>
+                      navigate(`/trip/${trip.id}`, { state: { trip } })
+                    }
                     className="bg-white text-slate-700 p-2 rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
                     title="Edit trip"
                   >
