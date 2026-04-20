@@ -1,6 +1,7 @@
 # Smart Travel Planner
 
 A production-level React application that helps users plan trips, manage budgets, and organize travel documents all in one place.
+**DEMO VIDEO LINK - https://youtu.be/rH7hMZXoPag**
 
 ## Problem Statement
 
